@@ -125,7 +125,7 @@ const countryTransportCapabilities = {
     ],
 };
 // Données des ports et aéroports principaux (simplifié pour l'exemple)
-// on l'implementera apres
+// Utilisé pour la validation de proximité
 const transportHubs = {
     ports: [
         { name: "Port de Dakar", coords: [14.6937, -17.4441] },
@@ -178,9 +178,10 @@ function showErrorToast(message, details = "") {
             </div>
             <div class="ml-3">
                 <h3 class="text-sm font-bold">Transport Incompatible</h3>
-                <p class="text-sm mt-1">${message}</p>${details ? `<p class="text-xs mt-2 text-red-200">${details}</p>` : ""}
+                <p class="text-sm mt-1">${message}</p>${details ? ` <p class="text-xs mt-2 text-red-200">${details}</p>` : ""}
             </div>
-            <button onclick="this.parentElement?.parentElement?.remove()" class="ml-auto text-red-200 hover:text-white">
+            <button onclick="this.parentElement?.parentElement?.remove()"
+class="ml-auto text-red-200 hover:text-white">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -204,9 +205,10 @@ function showWarningToast(message, details = "") {
             </div>
             <div class="ml-3">
                 <h3 class="text-sm font-bold">Attention</h3>
-                <p class="text-sm mt-1">${message}</p>${details ? `<p class="text-xs mt-2 text-yellow-200">${details}</p>` : ""}
+                <p class="text-sm mt-1">${message}</p>${details ? ` <p class="text-xs mt-2 text-yellow-200">${details}</p>` : ""}
             </div>
-            <button onclick="this.parentElement?.parentElement?.remove()" class="ml-auto text-yellow-200 hover:text-white">
+            <button onclick="this.parentElement?.parentElement?.remove()"
+class="ml-auto text-yellow-200 hover:text-white">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -766,6 +768,19 @@ function updateTransportIndicator(type) {
         }
     }
 }
+/**
+ * Génère un numéro de cargaison unique - VERSION CORRIGÉE
+ * Utilise la date actuelle + millisecondes pour garantir l'unicité
+ * Format: CARG-JJMM-XXXX où JJMM = jour/mois et XXXX = millisecondes
+ */
+function generateCargoNumber() {
+    const now = new Date();
+    const day = now.getDate().toString().padStart(2, "0");
+    const month = (now.getMonth() + 1).toString().padStart(2, "0");
+    // Utilise les millisecondes pour garantir l'unicité
+    const timestamp = Date.now().toString().slice(-4);
+    return `CARG-${day}${month}-${timestamp}`;
+}
 // --- 8. Initialisation des Événements ---
 // Cette section attache les fonctions aux événements DOM.
 document.addEventListener("DOMContentLoaded", () => {
@@ -783,6 +798,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const lieuArriveeInput = document.getElementById("lieuArrivee");
     const formCargaison = document.getElementById("form-cargaison");
     const clearFormBtn = document.getElementById("clear-form");
+    const numeroInput = document.getElementById("numero");
+    // Générer le numéro de cargaison au chargement de la page
+    numeroInput.value = generateCargoNumber();
     // Événements pour les boutons de sélection de mode sur la carte
     selectDepartureModeBtn === null || selectDepartureModeBtn === void 0 ? void 0 : selectDepartureModeBtn.addEventListener("click", () => {
         selectionMode = selectionMode === "departure" ? null : "departure";
@@ -876,7 +894,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
     // Gestion de la soumission du formulaire avec validation finale
-    formCargaison === null || formCargaison === void 0 ? void 0 : formCargaison.addEventListener("submit", (e) => {
+    formCargaison === null || formCargaison === void 0 ? void 0 : formCargaison.addEventListener("submit", (e) => __awaiter(void 0, void 0, void 0, function* () {
         var _a;
         e.preventDefault();
         // Vérifications de base avant la validation complexe
@@ -894,7 +912,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return; // Arrête la soumission si la validation échoue
         }
         // Récupération des données du formulaire
-        const numeroInput = document.getElementById("numero");
         const poidsMaxInput = document.getElementById("poidsMax");
         const distanceKmInput = document.getElementById("distanceKm");
         const lieuDepartInput = document.getElementById("lieuDepart");
@@ -902,10 +919,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const dateDepartInput = document.getElementById("dateDepart");
         const dateArriveeInput = document.getElementById("dateArrivee");
         const formData = {
-            numero: (numeroInput === null || numeroInput === void 0 ? void 0 : numeroInput.value) || "",
-            poidsMax: (poidsMaxInput === null || poidsMaxInput === void 0 ? void 0 : poidsMaxInput.value) || "",
+            id: numeroInput.value, // Utiliser le numéro généré comme ID
+            numero: numeroInput.value,
+            poidsMax: Number.parseFloat((poidsMaxInput === null || poidsMaxInput === void 0 ? void 0 : poidsMaxInput.value) || "0"), // Convertir en nombre
             type: transportType,
-            distance: (distanceKmInput === null || distanceKmInput === void 0 ? void 0 : distanceKmInput.value) || "",
+            distance: Number.parseFloat((distanceKmInput === null || distanceKmInput === void 0 ? void 0 : distanceKmInput.value) || "0"), // Convertir en nombre
             lieuDepart: {
                 nom: (lieuDepartInput === null || lieuDepartInput === void 0 ? void 0 : lieuDepartInput.value) || "",
                 latitude: departureCoords[0],
@@ -920,12 +938,35 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             dateDepart: (dateDepartInput === null || dateDepartInput === void 0 ? void 0 : dateDepartInput.value) || "",
             dateArrivee: (dateArriveeInput === null || dateArriveeInput === void 0 ? void 0 : dateArriveeInput.value) || "",
+            etatAvancement: "EN ATTENTE", // Valeur par défaut selon UML
+            etatGlobal: "OUVERT", // Valeur par défaut selon UML
+            colis: [], // Initialiser avec un tableau vide de colis
         };
         console.log("Données de la cargaison validées:", formData);
-        showSuccessToast("Cargaison créée avec succès !");
-        // Ici, vous enverriez les données à votre backend (ex: via fetch API)
-        // fetch('/api/cargaisons', { method: 'POST', body: JSON.stringify(formData) })
-    });
+        try {
+            const response = yield fetch("http://localhost:3000/cargaisons", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+            if (!response.ok) {
+                const errorData = yield response.json();
+                throw new Error(`Erreur HTTP: ${response.status} - ${errorData.message || response.statusText}`);
+            }
+            const result = yield response.json();
+            console.log("Cargaison créée avec succès sur le serveur:", result);
+            showSuccessToast("Cargaison créée avec succès !");
+            formCargaison.reset(); // Réinitialise le formulaire
+            clearAllMarkers(); // Efface les marqueurs et infos de la carte
+            numeroInput.value = generateCargoNumber(); // Génère un nouveau numéro pour la prochaine cargaison
+        }
+        catch (error) {
+            console.error("Erreur lors de la création de la cargaison:", error);
+            showErrorToast("Échec de la création de la cargaison", `Veuillez vérifier le serveur JSON. Détails: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }));
     // Événement pour le bouton "Annuler" (réinitialise le formulaire et la carte)
     clearFormBtn === null || clearFormBtn === void 0 ? void 0 : clearFormBtn.addEventListener("click", () => {
         formCargaison === null || formCargaison === void 0 ? void 0 : formCargaison.reset();
@@ -934,6 +975,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (durationInfoEl) {
             durationInfoEl.textContent = "Sélectionnez les dates pour voir la durée du transport";
         }
+        numeroInput.value = generateCargoNumber(); // Génère un nouveau numéro après annulation
     });
 });
 // Définit la page active pour la navigation (utilisé par le script de navigation PHP)

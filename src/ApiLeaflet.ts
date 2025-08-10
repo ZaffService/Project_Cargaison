@@ -1,13 +1,16 @@
-import type * as L from "leaflet" 
+import type * as L from "leaflet" // Importe Leaflet
 
-
+// Déclaration globale pour Leaflet et d'autres variables si nécessaire
+// Cela indique à TypeScript que ces objets existent globalement.
 declare global {
   interface Window {
-    L: typeof L 
-    currentPage: string 
+    L: typeof L // Importe le type de Leaflet
+    currentPage: string // Pour la navigation PHP
   }
 }
 
+// --- 1. Définition des Interfaces et Types ---
+// Ces interfaces aident TypeScript à comprendre la structure de vos données.
 
 // Données sur les capacités de transport des pays
 interface CountryCapabilitiesData {
@@ -25,18 +28,19 @@ interface CountryData {
   isIsland: boolean // Est-ce une île ?
 }
 
+// Structure des résultats de l'API Nominatim (OpenStreetMap)
 interface NominatimAddress {
-  country?: string;
-  country_code?: string;
-  [key: string]: string | undefined; // uniquement des propriétés string optionnelles
+  country?: string
+  country_code?: string
+  [key: string]: any // Permet d'autres propriétés non définies ici
 }
 
 interface NominatimResult {
-  lat: string; // Latitude sous forme de chaîne
-  lon: string; // Longitude sous forme de chaîne
-  display_name: string; // Nom complet du lieu
-  address: NominatimAddress; // Détails de l'adresse
-  [key: string]: string | NominatimAddress | undefined; // autres propriétés au format string ou NominatimAddress
+  lat: string // Latitude sous forme de chaîne
+  lon: string // Longitude sous forme de chaîne
+  display_name: string // Nom complet du lieu
+  address: NominatimAddress // Détails de l'adresse
+  [key: string]: any // Permet d'autres propriétés
 }
 
 // Capacités de transport d'un pays
@@ -170,7 +174,7 @@ const countryTransportCapabilities: CountryCapabilitiesData = {
 }
 
 // Données des ports et aéroports principaux (simplifié pour l'exemple)
-// on l'implementera apres
+// Utilisé pour la validation de proximité
 const transportHubs = {
   ports: [
     { name: "Port de Dakar", coords: [14.6937, -17.4441] },
@@ -227,9 +231,10 @@ function showErrorToast(message: string, details = ""): void {
             </div>
             <div class="ml-3">
                 <h3 class="text-sm font-bold">Transport Incompatible</h3>
-                <p class="text-sm mt-1">${message}</p>${details ? `<p class="text-xs mt-2 text-red-200">${details}</p>` : ""}
+                <p class="text-sm mt-1">${message}</p>${details ? ` <p class="text-xs mt-2 text-red-200">${details}</p>` : ""}
             </div>
-            <button onclick="this.parentElement?.parentElement?.remove()" class="ml-auto text-red-200 hover:text-white">
+            <button onclick="this.parentElement?.parentElement?.remove()"
+class="ml-auto text-red-200 hover:text-white">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -254,9 +259,10 @@ function showWarningToast(message: string, details = ""): void {
             </div>
             <div class="ml-3">
                 <h3 class="text-sm font-bold">Attention</h3>
-                <p class="text-sm mt-1">${message}</p>${details ? `<p class="text-xs mt-2 text-yellow-200">${details}</p>` : ""}
+                <p class="text-sm mt-1">${message}</p>${details ? ` <p class="text-xs mt-2 text-yellow-200">${details}</p>` : ""}
             </div>
-            <button onclick="this.parentElement?.parentElement?.remove()" class="ml-auto text-yellow-200 hover:text-white">
+            <button onclick="this.parentElement?.parentElement?.remove()"
+class="ml-auto text-yellow-200 hover:text-white">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -881,6 +887,22 @@ function updateTransportIndicator(type: string): void {
   }
 }
 
+/**
+ * Génère un numéro de cargaison unique - VERSION CORRIGÉE
+ * Utilise la date actuelle + millisecondes pour garantir l'unicité
+ * Format: CARG-JJMM-XXXX où JJMM = jour/mois et XXXX = millisecondes
+ */
+function generateCargoNumber(): string {
+  const now = new Date();
+  const day = now.getDate().toString().padStart(2, "0");
+  const month = (now.getMonth() + 1).toString().padStart(2, "0");
+  
+  // Utilise les millisecondes pour garantir l'unicité
+  const timestamp = Date.now().toString().slice(-4);
+  
+  return `CARG-${day}${month}-${timestamp}`;
+}
+
 // --- 8. Initialisation des Événements ---
 // Cette section attache les fonctions aux événements DOM.
 document.addEventListener("DOMContentLoaded", (): void => {
@@ -899,6 +921,10 @@ document.addEventListener("DOMContentLoaded", (): void => {
   const lieuArriveeInput = document.getElementById("lieuArrivee") as HTMLInputElement | null
   const formCargaison = document.getElementById("form-cargaison") as HTMLFormElement | null
   const clearFormBtn = document.getElementById("clear-form")
+  const numeroInput = document.getElementById("numero") as HTMLInputElement
+
+  // Générer le numéro de cargaison au chargement de la page
+  numeroInput.value = generateCargoNumber()
 
   // Événements pour les boutons de sélection de mode sur la carte
   selectDepartureModeBtn?.addEventListener("click", (): void => {
@@ -1009,7 +1035,7 @@ document.addEventListener("DOMContentLoaded", (): void => {
   })
 
   // Gestion de la soumission du formulaire avec validation finale
-  formCargaison?.addEventListener("submit", (e: Event): void => {
+  formCargaison?.addEventListener("submit", async (e: Event): Promise<void> => {
     e.preventDefault()
 
     // Vérifications de base avant la validation complexe
@@ -1029,7 +1055,6 @@ document.addEventListener("DOMContentLoaded", (): void => {
     }
 
     // Récupération des données du formulaire
-    const numeroInput = document.getElementById("numero") as HTMLInputElement
     const poidsMaxInput = document.getElementById("poidsMax") as HTMLInputElement
     const distanceKmInput = document.getElementById("distanceKm") as HTMLInputElement
     const lieuDepartInput = document.getElementById("lieuDepart") as HTMLInputElement
@@ -1038,10 +1063,11 @@ document.addEventListener("DOMContentLoaded", (): void => {
     const dateArriveeInput = document.getElementById("dateArrivee") as HTMLInputElement
 
     const formData = {
-      numero: numeroInput?.value || "",
-      poidsMax: poidsMaxInput?.value || "",
+      id: numeroInput.value, // Utiliser le numéro généré comme ID
+      numero: numeroInput.value,
+      poidsMax: Number.parseFloat(poidsMaxInput?.value || "0"), // Convertir en nombre
       type: transportType,
-      distance: distanceKmInput?.value || "",
+      distance: Number.parseFloat(distanceKmInput?.value || "0"), // Convertir en nombre
       lieuDepart: {
         nom: lieuDepartInput?.value || "",
         latitude: departureCoords[0],
@@ -1056,12 +1082,40 @@ document.addEventListener("DOMContentLoaded", (): void => {
       },
       dateDepart: dateDepartInput?.value || "",
       dateArrivee: dateArriveeInput?.value || "",
+      etatAvancement: "EN ATTENTE", // Valeur par défaut selon UML
+      etatGlobal: "OUVERT", // Valeur par défaut selon UML
+      colis: [], // Initialiser avec un tableau vide de colis
     }
 
     console.log("Données de la cargaison validées:", formData)
-    showSuccessToast("Cargaison créée avec succès !")
-    // Ici, vous enverriez les données à votre backend (ex: via fetch API)
-    // fetch('/api/cargaisons', { method: 'POST', body: JSON.stringify(formData) })
+
+    try {
+      const response = await fetch("http://localhost:3000/cargaisons", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`Erreur HTTP: ${response.status} - ${errorData.message || response.statusText}`)
+      }
+
+      const result = await response.json()
+      console.log("Cargaison créée avec succès sur le serveur:", result)
+      showSuccessToast("Cargaison créée avec succès !")
+      formCargaison.reset() // Réinitialise le formulaire
+      clearAllMarkers() // Efface les marqueurs et infos de la carte
+      numeroInput.value = generateCargoNumber() // Génère un nouveau numéro pour la prochaine cargaison
+    } catch (error) {
+      console.error("Erreur lors de la création de la cargaison:", error)
+      showErrorToast(
+        "Échec de la création de la cargaison",
+        `Veuillez vérifier le serveur JSON. Détails: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
   })
 
   // Événement pour le bouton "Annuler" (réinitialise le formulaire et la carte)
@@ -1072,6 +1126,7 @@ document.addEventListener("DOMContentLoaded", (): void => {
     if (durationInfoEl) {
       durationInfoEl.textContent = "Sélectionnez les dates pour voir la durée du transport"
     }
+    numeroInput.value = generateCargoNumber() // Génère un nouveau numéro après annulation
   })
 })
 

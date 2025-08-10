@@ -10,9 +10,17 @@
 <h3 class="text-cyan-400 font-bold mb-3 text-sm">INFORMATIONS PRINCIPALES</h3>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
 <div>
-<label class="block text-cyan-400 font-semibold mb-1 text-xs">Numéro de Cargaison</label>
-<input type="text" id="numero" name="numero" placeholder="CARG-2024-001" required class="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none text-sm">
+  <label class="block text-cyan-400 font-semibold mb-1 text-xs">Numéro de Cargaison</label>
+  <input 
+    type="text" 
+    id="numero" 
+    name="numero" 
+    placeholder="CARG-1008-9452" 
+    required 
+    disabled
+    class="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none text-sm">
 </div>
+
 <div>
 <label class="block text-cyan-400 font-semibold mb-1 text-xs">Poids Max (kg)</label>
 <input type="number" id="poidsMax" name="poidsMax" placeholder="5000" required class="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none text-sm">
