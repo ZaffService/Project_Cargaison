@@ -25,19 +25,18 @@ interface CountryData {
   isIsland: boolean // Est-ce une île ?
 }
 
-// Structure des résultats de l'API Nominatim (OpenStreetMap)
 interface NominatimAddress {
-  country?: string
-  country_code?: string
-  [key: string]: any // Permet d'autres propriétés non définies ici
+  country?: string;
+  country_code?: string;
+  [key: string]: string | undefined; // uniquement des propriétés string optionnelles
 }
 
 interface NominatimResult {
-  lat: string // Latitude sous forme de chaîne
-  lon: string // Longitude sous forme de chaîne
-  display_name: string // Nom complet du lieu
-  address: NominatimAddress // Détails de l'adresse
-  [key: string]: any // Permet d'autres propriétés
+  lat: string; // Latitude sous forme de chaîne
+  lon: string; // Longitude sous forme de chaîne
+  display_name: string; // Nom complet du lieu
+  address: NominatimAddress; // Détails de l'adresse
+  [key: string]: string | NominatimAddress | undefined; // autres propriétés au format string ou NominatimAddress
 }
 
 // Capacités de transport d'un pays
@@ -171,7 +170,7 @@ const countryTransportCapabilities: CountryCapabilitiesData = {
 }
 
 // Données des ports et aéroports principaux (simplifié pour l'exemple)
-// Utilisé pour la validation de proximité
+// on l'implementera apres
 const transportHubs = {
   ports: [
     { name: "Port de Dakar", coords: [14.6937, -17.4441] },

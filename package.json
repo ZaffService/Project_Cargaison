@@ -4,6 +4,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "php-server": "php -S localhost:8000",
+    "json-server": "json-server --watch db.json --port 3000",
+    "watch-ts": "tsc --watch",
     "dev": "concurrently \"npm run php-server\" \"npm run json-server\" \"npm run watch-ts\""
   },
   "keywords": [],
@@ -11,7 +14,9 @@
   "license": "ISC",
   "devDependencies": {
     "@types/leaflet": "^1.9.20",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "json-server": "^1.0.0-beta.1",
+    "concurrently": "^8.2.2"
   },
   "repository": {
     "type": "git",

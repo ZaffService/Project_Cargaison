@@ -125,7 +125,7 @@ const countryTransportCapabilities = {
     ],
 };
 // Données des ports et aéroports principaux (simplifié pour l'exemple)
-// Utilisé pour la validation de proximité
+// on l'implementera apres
 const transportHubs = {
     ports: [
         { name: "Port de Dakar", coords: [14.6937, -17.4441] },
