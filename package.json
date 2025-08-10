@@ -5,13 +5,24 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "concurrently \"npm run php-server\" \"npm run json-server\" \"npm run watch-ts\""
-
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "devDependencies": {
+    "@types/leaflet": "^1.9.20",
     "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZaffService/Project_Cargaison.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ZaffService/Project_Cargaison/issues"
+  },
+  "homepage": "https://github.com/ZaffService/Project_Cargaison#readme",
+  "description": "",
+  "dependencies": {
+    "leaflet": "^1.9.4"
   }
 }
