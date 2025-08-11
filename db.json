@@ -1,10 +1,35 @@
 {
   "gestionnaire": [
     {
-      "id": 1,
+      "id": "1",
       "username": "zafe",
       "password": "123"
     }
   ],
-  "cargaisons" : []
+  "cargaisons": [
+    {
+      "id": "CARG-1108-5983",
+      "numero": "CARG-1108-5983",
+      "poidsMax": 23,
+      "type": "AERIEN",
+      "distance": 1683,
+      "lieuDepart": {
+        "nom": "Avenue Cheikh Amadou Bamba Mbaké, HLM Nimzatt, HLM Fass, Commune de Gueule Tapée-Fass-Colobane, Arrondissement de Dakar-Plateau, Dakar, Région de Dakar, 13500, Sénégal",
+        "latitude": 14.693425,
+        "longitude": -17.447938,
+        "pays": "Sénégal"
+      },
+      "lieuArrivee": {
+        "nom": "Aouint Yghomane, caïdat d'Aouint Yghomane, Cercle d'Assa, Province Assa-Zag, Guelmim-Oued Noun, Maroc",
+        "latitude": 28.3347722,
+        "longitude": -10.3713379,
+        "pays": "Maroc"
+      },
+      "dateDepart": "2025-08-12T00:00:00.000Z",
+      "dateArrivee": "2025-08-13T00:00:00.000Z",
+      "etatAvancement": "EN_ATTENTE",
+      "etatGlobal": "OUVERT",
+      "colis": []
+    }
+  ]
 }

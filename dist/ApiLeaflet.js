@@ -1,12 +1,14 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
+export var EtatAvancement;
+(function (EtatAvancement) {
+    EtatAvancement["EN_ATTENTE"] = "EN_ATTENTE";
+    EtatAvancement["EN_COURS"] = "EN_COURS";
+    EtatAvancement["ARRIVE"] = "ARRIVE";
+})(EtatAvancement || (EtatAvancement = {}));
+export var EtatGlobal;
+(function (EtatGlobal) {
+    EtatGlobal["OUVERT"] = "OUVERT";
+    EtatGlobal["FERME"] = "FERME";
+})(EtatGlobal || (EtatGlobal = {}));
 // --- 2. Constantes et Données ---
 // Ces données sont utilisées pour la logique de validation des transports.
 const countryTransportCapabilities = {
@@ -298,9 +300,9 @@ function calculateDirectDistance(coords1, coords2) {
 }
 // --- 6. Fonctions de Validation du Transport ---
 // Cette fonction est le cœur de la logique de validation.
-function validateTransportType(transportType) {
+function validateTransportType(TypeCargaison) {
     // Si les données de pays ne sont pas encore disponibles, on ne peut pas valider
-    if (!departureCountryData || !arrivalCountryData || !transportType) {
+    if (!departureCountryData || !arrivalCountryData || !TypeCargaison) {
         return true; // Pas assez d'informations pour valider, on autorise pour l'instant
     }
     const departureCapabilities = checkTransportCapabilities(departureCountryData.country);
@@ -308,7 +310,7 @@ function validateTransportType(transportType) {
     if (!departureCapabilities || !arrivalCapabilities) {
         return true; // Données insuffisantes, on laisse passer
     }
-    switch (transportType) {
+    switch (TypeCargaison) {
         case "MARITIME":
             // Si le pays de départ est enclavé, le transport maritime est impossible
             if (departureCapabilities.isLandlocked) {
@@ -327,7 +329,7 @@ function validateTransportType(transportType) {
             return true; // Validation réussie pour le maritime
         case "ROUTIER":
             const distanceInput = document.getElementById("distanceKm");
-            const distance = Number.parseFloat((distanceInput === null || distanceInput === void 0 ? void 0 : distanceInput.value) || "0");
+            const distance = Number.parseFloat(distanceInput?.value || "0");
             // Avertissement si la distance est très grande pour le routier
             if (distance > 5000) {
                 showWarningToast("Distance importante pour transport routier", `${distance} km est une distance considérable. Le transport aérien pourrait être plus efficace.`);
@@ -383,7 +385,7 @@ function initMap() {
         map.on("click", onMapClick); // Attache l'événement de clic sur la carte
         // Invalide la taille de la carte pour s'assurer qu'elle s'affiche correctement
         setTimeout(() => {
-            map === null || map === void 0 ? void 0 : map.invalidateSize();
+            map?.invalidateSize();
         }, 100);
         console.log("Carte initialisée avec succès");
     }, 500);
@@ -404,67 +406,63 @@ function onMapClick(e) {
     }
 }
 // Définit le point de départ sur la carte
-function setDeparturePoint(lat, lng) {
-    return __awaiter(this, void 0, void 0, function* () {
-        departureCoords = [lat, lng]; // Stocke les coordonnées
-        if (departureMarker) {
-            map === null || map === void 0 ? void 0 : map.removeLayer(departureMarker); // Supprime l'ancien marqueur si existe
-        }
-        if (map) {
-            // Crée un nouveau marqueur avec une icône personnalisée 'D'
-            departureMarker = window.L.marker([lat, lng], {
-                icon: window.L.icon({
-                    iconUrl: "data:image/svg+xml;base64," +
-                        btoa(`
+async function setDeparturePoint(lat, lng) {
+    departureCoords = [lat, lng]; // Stocke les coordonnées
+    if (departureMarker) {
+        map?.removeLayer(departureMarker); // Supprime l'ancien marqueur si existe
+    }
+    if (map) {
+        // Crée un nouveau marqueur avec une icône personnalisée 'D'
+        departureMarker = window.L.marker([lat, lng], {
+            icon: window.L.icon({
+                iconUrl: "data:image/svg+xml;base64," +
+                    btoa(`
                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="41" viewBox="0 0 25 41">
                    <path fill="#00bcd4" d="M12.5 0C5.6 0 0 5.6 0 12.5c0 7.5 12.5 28.5 12.5 28.5S25 20 25 12.5C25 5.6 19.4 0 12.5 0z"/>
                    <circle cx="12.5" cy="12.5" r="7" fill="white"/>
                    <text x="12.5" y="17" text-anchor="middle" fill="#00bcd4" font-size="10" font-weight="bold">D</text>
                </svg>
            `),
-                }),
-            }).addTo(map);
-        }
-        const departureCoordsEl = document.getElementById("departure-coords");
-        if (departureCoordsEl) {
-            departureCoordsEl.textContent = `Coordonnées: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        }
-        yield reverseGeocode(lat, lng, "lieuDepart"); // Géocodage inverse pour obtenir le nom du lieu
-        if (arrivalCoords) {
-            calculateDistance(); // Recalcule la distance si le point d'arrivée est déjà défini
-        }
-    });
+            }),
+        }).addTo(map);
+    }
+    const departureCoordsEl = document.getElementById("departure-coords");
+    if (departureCoordsEl) {
+        departureCoordsEl.textContent = `Coordonnées: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+    await reverseGeocode(lat, lng, "lieuDepart"); // Géocodage inverse pour obtenir le nom du lieu
+    if (arrivalCoords) {
+        calculateDistance(); // Recalcule la distance si le point d'arrivée est déjà défini
+    }
 }
 // Définit le point d'arrivée sur la carte (similaire à setDeparturePoint)
-function setArrivalPoint(lat, lng) {
-    return __awaiter(this, void 0, void 0, function* () {
-        arrivalCoords = [lat, lng];
-        if (arrivalMarker) {
-            map === null || map === void 0 ? void 0 : map.removeLayer(arrivalMarker);
-        }
-        if (map) {
-            arrivalMarker = window.L.marker([lat, lng], {
-                icon: window.L.icon({
-                    iconUrl: "data:image/svg+xml;base64," +
-                        btoa(`
+async function setArrivalPoint(lat, lng) {
+    arrivalCoords = [lat, lng];
+    if (arrivalMarker) {
+        map?.removeLayer(arrivalMarker);
+    }
+    if (map) {
+        arrivalMarker = window.L.marker([lat, lng], {
+            icon: window.L.icon({
+                iconUrl: "data:image/svg+xml;base64," +
+                    btoa(`
                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="41" viewBox="0 0 25 41">
                    <path fill="#4caf50" d="M12.5 0C5.6 0 0 5.6 0 12.5c0 7.5 12.5 28.5 12.5 28.5S25 20 25 12.5C25 5.6 19.4 0 12.5 0z"/>
                    <circle cx="12.5" cy="12.5" r="7" fill="white"/>
                    <text x="12.5" y="17" text-anchor="middle" fill="#4caf50" font-size="10" font-weight="bold">A</text>
                </svg>
            `),
-                }),
-            }).addTo(map);
-        }
-        const arrivalCoordsEl = document.getElementById("arrival-coords");
-        if (arrivalCoordsEl) {
-            arrivalCoordsEl.textContent = `Coordonnées: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        }
-        yield reverseGeocode(lat, lng, "lieuArrivee");
-        if (departureCoords) {
-            calculateDistance();
-        }
-    });
+            }),
+        }).addTo(map);
+    }
+    const arrivalCoordsEl = document.getElementById("arrival-coords");
+    if (arrivalCoordsEl) {
+        arrivalCoordsEl.textContent = `Coordonnées: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+    await reverseGeocode(lat, lng, "lieuArrivee");
+    if (departureCoords) {
+        calculateDistance();
+    }
 }
 // Met à jour l'apparence des boutons de sélection de mode (Départ/Arrivée)
 function updateModeButtons() {
@@ -516,19 +514,51 @@ function updateModeButtons() {
     }
 }
 // Géocodage inverse : convertit des coordonnées en adresse et met à jour les données du pays
-function reverseGeocode(lat, lng, inputId) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const response = yield fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`);
-            const data = yield response.json();
-            const address = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-            const inputEl = document.getElementById(inputId);
-            if (inputEl) {
-                inputEl.value = address;
+async function reverseGeocode(lat, lng, inputId) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`);
+        const data = await response.json();
+        const address = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        const inputEl = document.getElementById(inputId);
+        if (inputEl) {
+            inputEl.value = address;
+        }
+        const countryData = extractCountryFromGeodata(data);
+        if (countryData) {
+            // Met à jour les données du pays de départ ou d'arrivée
+            if (inputId === "lieuDepart") {
+                departureCountryData = countryData;
             }
-            const countryData = extractCountryFromGeodata(data);
+            else if (inputId === "lieuArrivee") {
+                arrivalCountryData = countryData;
+            }
+        }
+        // Re-valide le type de transport après avoir obtenu les données du pays
+        const currentTransportTypeEl = document.getElementById("typeTransport");
+        const currentTransportType = currentTransportTypeEl?.value || "";
+        if (currentTransportType) {
+            setTimeout(() => validateTransportType(currentTransportType), 500);
+        }
+    }
+    catch (error) {
+        console.error("Erreur de géocodage inverse:", error);
+        const inputEl = document.getElementById(inputId);
+        if (inputEl) {
+            inputEl.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        }
+    }
+}
+// Recherche de lieux : convertit une adresse en coordonnées et met à jour les données du pays
+async function searchLocation(query, callback, inputId) {
+    if (query.length < 3)
+        return;
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&addressdetails=1`);
+        const data = await response.json();
+        if (data.length > 0) {
+            const result = data[0];
+            const countryData = extractCountryFromGeodata(result);
             if (countryData) {
-                // Met à jour les données du pays de départ ou d'arrivée
                 if (inputId === "lieuDepart") {
                     departureCountryData = countryData;
                 }
@@ -536,55 +566,19 @@ function reverseGeocode(lat, lng, inputId) {
                     arrivalCountryData = countryData;
                 }
             }
-            // Re-valide le type de transport après avoir obtenu les données du pays
-            const currentTransportTypeEl = document.getElementById("typeTransport");
-            const currentTransportType = (currentTransportTypeEl === null || currentTransportTypeEl === void 0 ? void 0 : currentTransportTypeEl.value) || "";
-            if (currentTransportType) {
-                setTimeout(() => validateTransportType(currentTransportType), 500);
-            }
         }
-        catch (error) {
-            console.error("Erreur de géocodage inverse:", error);
-            const inputEl = document.getElementById(inputId);
-            if (inputEl) {
-                inputEl.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-            }
-        }
-    });
-}
-// Recherche de lieux : convertit une adresse en coordonnées et met à jour les données du pays
-function searchLocation(query, callback, inputId) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (query.length < 3)
-            return;
-        try {
-            const response = yield fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&addressdetails=1`);
-            const data = yield response.json();
-            if (data.length > 0) {
-                const result = data[0];
-                const countryData = extractCountryFromGeodata(result);
-                if (countryData) {
-                    if (inputId === "lieuDepart") {
-                        departureCountryData = countryData;
-                    }
-                    else if (inputId === "lieuArrivee") {
-                        arrivalCountryData = countryData;
-                    }
-                }
-            }
-            callback(data);
-        }
-        catch (error) {
-            console.error("Erreur de recherche:", error);
-        }
-    });
+        callback(data);
+    }
+    catch (error) {
+        console.error("Erreur de recherche:", error);
+    }
 }
 // Calcule la distance, le temps estimé, le coût estimé et met à jour l'UI
 function calculateDistance() {
     if (!departureCoords || !arrivalCoords)
         return;
     const typeTransportEl = document.getElementById("typeTransport");
-    const cargoType = (typeTransportEl === null || typeTransportEl === void 0 ? void 0 : typeTransportEl.value) || "";
+    const cargoType = typeTransportEl?.value || "";
     // Validation de la faisabilité du transport avant de calculer
     if (!validateTransportType(cargoType)) {
         clearMapAndDistanceInfo(); // Efface les infos si la validation échoue
@@ -668,12 +662,10 @@ function drawRoute(cargoType) {
             weight: 3,
             opacity: 0.8,
         }).addTo(map);
-        // Ajuste la vue de la carte pour inclure tous les marqueurs et la ligne
         const group = window.L.featureGroup([departureMarker, arrivalMarker, routePolyline].filter(Boolean));
         map.fitBounds(group.getBounds().pad(0.1));
     }
 }
-// Efface la ligne de la carte et réinitialise les informations de distance/temps/coût
 function clearMapAndDistanceInfo() {
     if (map && routePolyline) {
         map.removeLayer(routePolyline);
@@ -683,7 +675,7 @@ function clearMapAndDistanceInfo() {
     const directDistanceEl = document.getElementById("direct-distance");
     const calculatedDistanceEl = document.getElementById("calculated-distance");
     const estimatedTimeEl = document.getElementById("estimated-time");
-    const estimatedCostEl = document.getElementById("estimated-cost");
+    // const estimatedCostEl = document.getElementById("estimated-cost")
     if (distanceKmInput)
         distanceKmInput.value = "";
     if (directDistanceEl)
@@ -692,8 +684,7 @@ function clearMapAndDistanceInfo() {
         calculatedDistanceEl.textContent = "-- km";
     if (estimatedTimeEl)
         estimatedTimeEl.textContent = "--";
-    if (estimatedCostEl)
-        estimatedCostEl.textContent = "--";
+    // if (estimatedCostEl) estimatedCostEl.textContent = "--"
     updateTransportIcon(""); // Efface l'icône
     updateTransportIndicator(""); // Efface l'indicateur
 }
@@ -726,15 +717,15 @@ function clearAllMarkers() {
         departureCoordsEl.textContent = "Coordonnées: Non définies";
     if (arrivalCoordsEl)
         arrivalCoordsEl.textContent = "Coordonnées: Non définies";
-    map === null || map === void 0 ? void 0 : map.setView([20, 0], 2); // Réinitialise la vue de la carte
+    map?.setView([20, 0], 2); // Réinitialise la vue de la carte
 }
 // Calcule la durée entre les dates de départ et d'arrivée
 function calculateDuration() {
     const startDateEl = document.getElementById("dateDepart");
     const endDateEl = document.getElementById("dateArrivee");
     const durationInfoEl = document.getElementById("duration-info");
-    const startDate = startDateEl === null || startDateEl === void 0 ? void 0 : startDateEl.value;
-    const endDate = endDateEl === null || endDateEl === void 0 ? void 0 : endDateEl.value;
+    const startDate = startDateEl?.value;
+    const endDate = endDateEl?.value;
     if (startDate && endDate && durationInfoEl) {
         const start = new Date(startDate);
         const end = new Date(endDate);
@@ -802,28 +793,28 @@ document.addEventListener("DOMContentLoaded", () => {
     // Générer le numéro de cargaison au chargement de la page
     numeroInput.value = generateCargoNumber();
     // Événements pour les boutons de sélection de mode sur la carte
-    selectDepartureModeBtn === null || selectDepartureModeBtn === void 0 ? void 0 : selectDepartureModeBtn.addEventListener("click", () => {
+    selectDepartureModeBtn?.addEventListener("click", () => {
         selectionMode = selectionMode === "departure" ? null : "departure";
         updateModeButtons();
     });
-    selectArrivalModeBtn === null || selectArrivalModeBtn === void 0 ? void 0 : selectArrivalModeBtn.addEventListener("click", () => {
+    selectArrivalModeBtn?.addEventListener("click", () => {
         selectionMode = selectionMode === "arrival" ? null : "arrival";
         updateModeButtons();
     });
-    clearMarkersBtn === null || clearMarkersBtn === void 0 ? void 0 : clearMarkersBtn.addEventListener("click", () => {
+    clearMarkersBtn?.addEventListener("click", () => {
         clearAllMarkers();
     });
     // Événements pour les boutons "Définir" à côté des champs de lieu
-    setDepartureBtn === null || setDepartureBtn === void 0 ? void 0 : setDepartureBtn.addEventListener("click", () => {
+    setDepartureBtn?.addEventListener("click", () => {
         selectionMode = selectionMode === "departure" ? null : "departure";
         updateModeButtons();
     });
-    setArrivalBtn === null || setArrivalBtn === void 0 ? void 0 : setArrivalBtn.addEventListener("click", () => {
+    setArrivalBtn?.addEventListener("click", () => {
         selectionMode = selectionMode === "arrival" ? null : "arrival";
         updateModeButtons();
     });
     // Événement pour le changement du type de transport
-    typeTransportSelect === null || typeTransportSelect === void 0 ? void 0 : typeTransportSelect.addEventListener("change", function () {
+    typeTransportSelect?.addEventListener("change", function () {
         const selectedType = this.value;
         // Valide immédiatement le type sélectionné
         if (!validateTransportType(selectedType)) {
@@ -854,55 +845,54 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
     // Événements pour le calcul de la durée entre les dates
-    dateDepartInput === null || dateDepartInput === void 0 ? void 0 : dateDepartInput.addEventListener("change", calculateDuration);
-    dateArriveeInput === null || dateArriveeInput === void 0 ? void 0 : dateArriveeInput.addEventListener("change", calculateDuration);
+    dateDepartInput?.addEventListener("change", calculateDuration);
+    dateArriveeInput?.addEventListener("change", calculateDuration);
     // Recherche de lieux en temps réel (avec délai pour éviter trop de requêtes)
     let departureTimeout;
-    lieuDepartInput === null || lieuDepartInput === void 0 ? void 0 : lieuDepartInput.addEventListener("input", function () {
+    lieuDepartInput?.addEventListener("input", function () {
         clearTimeout(departureTimeout);
         const query = this.value;
         if (query.length >= 3) {
-            departureTimeout = window.setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                yield searchLocation(query, (results) => {
+            departureTimeout = window.setTimeout(async () => {
+                await searchLocation(query, (results) => {
                     if (results.length > 0) {
                         const result = results[0];
                         const lat = Number.parseFloat(result.lat);
                         const lng = Number.parseFloat(result.lon);
                         setDeparturePoint(lat, lng);
-                        map === null || map === void 0 ? void 0 : map.setView([lat, lng], 10); // Centre la carte sur le lieu trouvé
+                        map?.setView([lat, lng], 10); // Centre la carte sur le lieu trouvé
                     }
                 }, "lieuDepart");
-            }), 1000); // Délai de 1 seconde
+            }, 1000); // Délai de 1 seconde
         }
     });
     let arrivalTimeout;
-    lieuArriveeInput === null || lieuArriveeInput === void 0 ? void 0 : lieuArriveeInput.addEventListener("input", function () {
+    lieuArriveeInput?.addEventListener("input", function () {
         clearTimeout(arrivalTimeout);
         const query = this.value;
         if (query.length >= 3) {
-            arrivalTimeout = window.setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                yield searchLocation(query, (results) => {
+            arrivalTimeout = window.setTimeout(async () => {
+                await searchLocation(query, (results) => {
                     if (results.length > 0) {
                         const result = results[0];
                         const lat = Number.parseFloat(result.lat);
                         const lng = Number.parseFloat(result.lon);
                         setArrivalPoint(lat, lng);
-                        map === null || map === void 0 ? void 0 : map.setView([lat, lng], 10);
+                        map?.setView([lat, lng], 10);
                     }
                 }, "lieuArrivee");
-            }), 1000);
+            }, 1000);
         }
     });
     // Gestion de la soumission du formulaire avec validation finale
-    formCargaison === null || formCargaison === void 0 ? void 0 : formCargaison.addEventListener("submit", (e) => __awaiter(void 0, void 0, void 0, function* () {
-        var _a;
+    formCargaison?.addEventListener("submit", async (e) => {
         e.preventDefault();
         // Vérifications de base avant la validation complexe
         if (!departureCoords || !arrivalCoords) {
             showErrorToast("Points manquants", "Veuillez sélectionner les lieux de départ et d'arrivée.");
             return;
         }
-        const transportType = (_a = document.getElementById("typeTransport")) === null || _a === void 0 ? void 0 : _a.value;
+        const transportType = document.getElementById("typeTransport")?.value;
         if (!transportType) {
             showErrorToast("Type requis", "Veuillez sélectionner un type de transport.");
             return;
@@ -918,44 +908,68 @@ document.addEventListener("DOMContentLoaded", () => {
         const lieuArriveeInput = document.getElementById("lieuArrivee");
         const dateDepartInput = document.getElementById("dateDepart");
         const dateArriveeInput = document.getElementById("dateArrivee");
-        const formData = {
-            id: numeroInput.value, // Utiliser le numéro généré comme ID
+        const data = {
+            id: numeroInput.value,
             numero: numeroInput.value,
-            poidsMax: Number.parseFloat((poidsMaxInput === null || poidsMaxInput === void 0 ? void 0 : poidsMaxInput.value) || "0"), // Convertir en nombre
+            poidsMax: Number.parseFloat(poidsMaxInput?.value || "0"),
             type: transportType,
-            distance: Number.parseFloat((distanceKmInput === null || distanceKmInput === void 0 ? void 0 : distanceKmInput.value) || "0"), // Convertir en nombre
+            distance: Number.parseFloat(distanceKmInput?.value || "0"),
             lieuDepart: {
-                nom: (lieuDepartInput === null || lieuDepartInput === void 0 ? void 0 : lieuDepartInput.value) || "",
+                nom: lieuDepartInput?.value || "",
                 latitude: departureCoords[0],
                 longitude: departureCoords[1],
-                pays: (departureCountryData === null || departureCountryData === void 0 ? void 0 : departureCountryData.country) || "",
+                pays: departureCountryData?.country || "",
             },
             lieuArrivee: {
-                nom: (lieuArriveeInput === null || lieuArriveeInput === void 0 ? void 0 : lieuArriveeInput.value) || "",
+                nom: lieuArriveeInput?.value || "",
                 latitude: arrivalCoords[0],
                 longitude: arrivalCoords[1],
-                pays: (arrivalCountryData === null || arrivalCountryData === void 0 ? void 0 : arrivalCountryData.country) || "",
+                pays: arrivalCountryData?.country || "",
             },
-            dateDepart: (dateDepartInput === null || dateDepartInput === void 0 ? void 0 : dateDepartInput.value) || "",
-            dateArrivee: (dateArriveeInput === null || dateArriveeInput === void 0 ? void 0 : dateArriveeInput.value) || "",
-            etatAvancement: "EN ATTENTE", // Valeur par défaut selon UML
-            etatGlobal: "OUVERT", // Valeur par défaut selon UML
-            colis: [], // Initialiser avec un tableau vide de colis
+            dateDepart: dateDepartInput?.value ? new Date(dateDepartInput.value) : undefined,
+            dateArrivee: dateArriveeInput?.value ? new Date(dateArriveeInput.value) : new Date(),
+            etatAvancement: EtatAvancement.EN_ATTENTE,
+            etatGlobal: EtatGlobal.OUVERT,
+            colis: [],
         };
-        console.log("Données de la cargaison validées:", formData);
+        //     const cargaison: Cargaison = {
+        //       id: numeroInput.value,
+        //       numero: numeroInput.value,
+        //       poidsMax: Number.parseFloat(poidsMaxInput?.value || "0"),
+        //       type: transportType as TypeCargaison,
+        //       distance: Number.parseFloat(distanceKmInput?.value || "0"),
+        //       lieuDepart: {
+        //         nom: lieuDepartInput?.value || "",
+        //         latitude: departureCoords[0],
+        //         longitude: departureCoords[1],
+        //         pays: departureCountryData?.country || "",
+        //     },
+        //     lieuArrivee: {
+        //         nom: lieuArriveeInput?.value || "",
+        //         latitude: arrivalCoords[0],
+        //         longitude: arrivalCoords[1],
+        //         pays: arrivalCountryData?.country || "",
+        //     },
+        //     dateDepart: dateDepartInput?.value ? new Date(dateDepartInput.value) : new Date(),
+        //     dateArrivee: dateArriveeInput?.value ? new Date(dateArriveeInput.value) : new Date(),
+        //     etatAvancement: EtatAvancement.EN_ATTENTE, 
+        //     etatGlobal: EtatGlobal.OUVERT,           
+        //     colis: [],
+        // }
+        console.log("Données de la cargaison validées:", data);
         try {
-            const response = yield fetch("http://localhost:3000/cargaisons", {
+            const response = await fetch("http://localhost:3000/cargaisons", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(data),
             });
             if (!response.ok) {
-                const errorData = yield response.json();
+                const errorData = await response.json();
                 throw new Error(`Erreur HTTP: ${response.status} - ${errorData.message || response.statusText}`);
             }
-            const result = yield response.json();
+            const result = await response.json();
             console.log("Cargaison créée avec succès sur le serveur:", result);
             showSuccessToast("Cargaison créée avec succès !");
             formCargaison.reset(); // Réinitialise le formulaire
@@ -966,18 +980,17 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Erreur lors de la création de la cargaison:", error);
             showErrorToast("Échec de la création de la cargaison", `Veuillez vérifier le serveur JSON. Détails: ${error instanceof Error ? error.message : String(error)}`);
         }
-    }));
-    // Événement pour le bouton "Annuler" (réinitialise le formulaire et la carte)
-    clearFormBtn === null || clearFormBtn === void 0 ? void 0 : clearFormBtn.addEventListener("click", () => {
-        formCargaison === null || formCargaison === void 0 ? void 0 : formCargaison.reset();
-        clearAllMarkers();
-        const durationInfoEl = document.getElementById("duration-info");
-        if (durationInfoEl) {
-            durationInfoEl.textContent = "Sélectionnez les dates pour voir la durée du transport";
-        }
-        numeroInput.value = generateCargoNumber(); // Génère un nouveau numéro après annulation
     });
+    // Événement pour le bouton "Annuler" (réinitialise le formulaire et la carte)
+    // clearFormBtn?.addEventListener("click", (): void => {
+    //   formCargaison?.reset()
+    //   clearAllMarkers()
+    //   const durationInfoEl = document.getElementById("duration-info")
+    //   if (durationInfoEl) {
+    //     durationInfoEl.textContent = "Sélectionnez les dates pour voir la durée du transport"
+    //   }
+    //   numeroInput.value = generateCargoNumber() // Génère un nouveau numéro après annulation
+    // })
 });
 // Définit la page active pour la navigation (utilisé par le script de navigation PHP)
 window.currentPage = "creation-cargaison";
-export {};

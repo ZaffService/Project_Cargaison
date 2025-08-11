@@ -1,5 +1,52 @@
 import type * as L from "leaflet" // Importe Leaflet
 
+
+export enum EtatAvancement {
+  EN_ATTENTE = "EN_ATTENTE",
+  EN_COURS = "EN_COURS",
+  ARRIVE = "ARRIVE"
+}
+
+export enum EtatGlobal {
+  OUVERT = "OUVERT",
+  FERME = "FERME"
+}
+
+
+export interface ILieu {
+    nom: string;
+    latitude: number;
+    longitude: number;
+    pays: string;
+}
+
+// Interface pour représenter un colis (à définir selon vos besoins)
+export interface IColis {
+    // Définir les propriétés du colis selon votre modèle
+    id?: string;
+    poids?: number;
+    description?: string;
+    // Ajoutez d'autres propriétés selon vos besoins
+}
+
+export interface ICargaison {
+    id?: string;
+    numero: string;
+    poidsMax: number;
+    type: TypeCargaison;
+    distance: number; // Changé de distanceKm à distance
+    lieuDepart: ILieu; // Changé de string à ILieu
+    lieuArrivee: ILieu; // Changé de string à ILieu
+    dateDepart: string | Date; // Accepter string ou Date
+    dateArrivee: string | Date; // Accepter string ou Date
+    etatAvancement: EtatAvancement;
+    etatGlobal: EtatGlobal;
+    colis: IColis[]; // Ajout du tableau de colis
+}
+
+
+
+
 // Déclaration globale pour Leaflet et d'autres variables si nécessaire
 // Cela indique à TypeScript que ces objets existent globalement.
 declare global {
@@ -11,6 +58,10 @@ declare global {
 
 // --- 1. Définition des Interfaces et Types ---
 // Ces interfaces aident TypeScript à comprendre la structure de vos données.
+
+// Type pour les types de cargaison/transport
+import { TypeCargaison } from "./enums/TypeCargaison";
+import type { Cargaison } from './models/Cargaison';
 
 // Données sur les capacités de transport des pays
 interface CountryCapabilitiesData {
@@ -358,9 +409,9 @@ function calculateDirectDistance(coords1: [number, number], coords2: [number, nu
 
 // --- 6. Fonctions de Validation du Transport ---
 // Cette fonction est le cœur de la logique de validation.
-function validateTransportType(transportType: string): boolean {
+function validateTransportType(TypeCargaison: string): boolean {
   // Si les données de pays ne sont pas encore disponibles, on ne peut pas valider
-  if (!departureCountryData || !arrivalCountryData || !transportType) {
+  if (!departureCountryData || !arrivalCountryData || !TypeCargaison) {
     return true // Pas assez d'informations pour valider, on autorise pour l'instant
   }
 
@@ -371,7 +422,7 @@ function validateTransportType(transportType: string): boolean {
     return true // Données insuffisantes, on laisse passer
   }
 
-  switch (transportType) {
+  switch (TypeCargaison) {
     case "MARITIME":
       // Si le pays de départ est enclavé, le transport maritime est impossible
       if (departureCapabilities.isLandlocked) {
@@ -784,13 +835,11 @@ function drawRoute(cargoType: string): void {
       opacity: 0.8,
     }).addTo(map)
 
-    // Ajuste la vue de la carte pour inclure tous les marqueurs et la ligne
     const group = window.L.featureGroup([departureMarker, arrivalMarker, routePolyline].filter(Boolean) as L.Layer[])
     map.fitBounds(group.getBounds().pad(0.1))
   }
 }
 
-// Efface la ligne de la carte et réinitialise les informations de distance/temps/coût
 function clearMapAndDistanceInfo(): void {
   if (map && routePolyline) {
     map.removeLayer(routePolyline)
@@ -800,13 +849,13 @@ function clearMapAndDistanceInfo(): void {
   const directDistanceEl = document.getElementById("direct-distance")
   const calculatedDistanceEl = document.getElementById("calculated-distance")
   const estimatedTimeEl = document.getElementById("estimated-time")
-  const estimatedCostEl = document.getElementById("estimated-cost")
+  // const estimatedCostEl = document.getElementById("estimated-cost")
 
   if (distanceKmInput) distanceKmInput.value = ""
   if (directDistanceEl) directDistanceEl.textContent = "-- km"
   if (calculatedDistanceEl) calculatedDistanceEl.textContent = "-- km"
   if (estimatedTimeEl) estimatedTimeEl.textContent = "--"
-  if (estimatedCostEl) estimatedCostEl.textContent = "--"
+  // if (estimatedCostEl) estimatedCostEl.textContent = "--"
 
   updateTransportIcon("") // Efface l'icône
   updateTransportIndicator("") // Efface l'indicateur
@@ -1062,32 +1111,63 @@ document.addEventListener("DOMContentLoaded", (): void => {
     const dateDepartInput = document.getElementById("dateDepart") as HTMLInputElement
     const dateArriveeInput = document.getElementById("dateArrivee") as HTMLInputElement
 
-    const formData = {
-      id: numeroInput.value, // Utiliser le numéro généré comme ID
+    
+    const data: Partial<ICargaison> = {
+      id: numeroInput.value,
       numero: numeroInput.value,
-      poidsMax: Number.parseFloat(poidsMaxInput?.value || "0"), // Convertir en nombre
-      type: transportType,
-      distance: Number.parseFloat(distanceKmInput?.value || "0"), // Convertir en nombre
+      poidsMax: Number.parseFloat(poidsMaxInput?.value || "0"),
+      type: transportType as TypeCargaison,
+      distance: Number.parseFloat(distanceKmInput?.value || "0"),
       lieuDepart: {
         nom: lieuDepartInput?.value || "",
         latitude: departureCoords[0],
         longitude: departureCoords[1],
         pays: departureCountryData?.country || "",
-      },
-      lieuArrivee: {
+    },
+    lieuArrivee: {
         nom: lieuArriveeInput?.value || "",
         latitude: arrivalCoords[0],
         longitude: arrivalCoords[1],
         pays: arrivalCountryData?.country || "",
-      },
-      dateDepart: dateDepartInput?.value || "",
-      dateArrivee: dateArriveeInput?.value || "",
-      etatAvancement: "EN ATTENTE", // Valeur par défaut selon UML
-      etatGlobal: "OUVERT", // Valeur par défaut selon UML
-      colis: [], // Initialiser avec un tableau vide de colis
-    }
+    },
+    dateDepart: dateDepartInput?.value ? new Date(dateDepartInput.value) : undefined,
+    dateArrivee: dateArriveeInput?.value ? new Date(dateArriveeInput.value) : new Date(),
+    etatAvancement: EtatAvancement.EN_ATTENTE, 
+    etatGlobal: EtatGlobal.OUVERT,           
+    colis: [],
+}
 
-    console.log("Données de la cargaison validées:", formData)
+
+//     const cargaison: Cargaison = {
+//       id: numeroInput.value,
+//       numero: numeroInput.value,
+//       poidsMax: Number.parseFloat(poidsMaxInput?.value || "0"),
+//       type: transportType as TypeCargaison,
+//       distance: Number.parseFloat(distanceKmInput?.value || "0"),
+//       lieuDepart: {
+//         nom: lieuDepartInput?.value || "",
+//         latitude: departureCoords[0],
+//         longitude: departureCoords[1],
+//         pays: departureCountryData?.country || "",
+//     },
+//     lieuArrivee: {
+//         nom: lieuArriveeInput?.value || "",
+//         latitude: arrivalCoords[0],
+//         longitude: arrivalCoords[1],
+//         pays: arrivalCountryData?.country || "",
+//     },
+//     dateDepart: dateDepartInput?.value ? new Date(dateDepartInput.value) : new Date(),
+//     dateArrivee: dateArriveeInput?.value ? new Date(dateArriveeInput.value) : new Date(),
+//     etatAvancement: EtatAvancement.EN_ATTENTE, 
+//     etatGlobal: EtatGlobal.OUVERT,           
+//     colis: [],
+// }
+
+
+
+
+
+    console.log("Données de la cargaison validées:", data)
 
     try {
       const response = await fetch("http://localhost:3000/cargaisons", {
@@ -1095,7 +1175,7 @@ document.addEventListener("DOMContentLoaded", (): void => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
       })
 
       if (!response.ok) {
@@ -1119,15 +1199,15 @@ document.addEventListener("DOMContentLoaded", (): void => {
   })
 
   // Événement pour le bouton "Annuler" (réinitialise le formulaire et la carte)
-  clearFormBtn?.addEventListener("click", (): void => {
-    formCargaison?.reset()
-    clearAllMarkers()
-    const durationInfoEl = document.getElementById("duration-info")
-    if (durationInfoEl) {
-      durationInfoEl.textContent = "Sélectionnez les dates pour voir la durée du transport"
-    }
-    numeroInput.value = generateCargoNumber() // Génère un nouveau numéro après annulation
-  })
+  // clearFormBtn?.addEventListener("click", (): void => {
+  //   formCargaison?.reset()
+  //   clearAllMarkers()
+  //   const durationInfoEl = document.getElementById("duration-info")
+  //   if (durationInfoEl) {
+  //     durationInfoEl.textContent = "Sélectionnez les dates pour voir la durée du transport"
+  //   }
+  //   numeroInput.value = generateCargoNumber() // Génère un nouveau numéro après annulation
+  // })
 })
 
 // Définit la page active pour la navigation (utilisé par le script de navigation PHP)

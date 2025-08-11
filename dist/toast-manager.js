@@ -13,10 +13,9 @@ export class ToastManager {
         this.root = root;
     }
     show(opt) {
-        var _a, _b, _c;
-        const id = (_a = opt.id) !== null && _a !== void 0 ? _a : `t_${crypto.randomUUID()}`;
-        const type = (_b = opt.type) !== null && _b !== void 0 ? _b : "info";
-        const duration = (_c = opt.durationMs) !== null && _c !== void 0 ? _c : 3500;
+        const id = opt.id ?? `t_${crypto.randomUUID()}`;
+        const type = opt.type ?? "info";
+        const duration = opt.durationMs ?? 3500;
         const el = document.createElement("div");
         el.dataset.toastId = id;
         el.className = `rounded-md border px-3 py-2 text-sm shadow-lg ${TYPE_STYLES[type]} toast-enter`;

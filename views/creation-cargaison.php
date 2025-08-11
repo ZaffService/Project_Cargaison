@@ -94,9 +94,9 @@
 </div>
 
 <div class="flex justify-end space-x-3 pt-4">
-<button type="button" id="clear-form" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white text-sm font-semibold transition-colors duration-300">
+<!-- <button type="button" id="clear-form" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white text-sm font-semibold transition-colors duration-300">
 <i class="fas fa-times mr-2"></i> Annuler
-</button>
+</button> -->
 <button type="submit" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-white text-sm font-semibold transition-colors duration-300 shadow-lg shadow-cyan-500/25">
 <i class="fas fa-save mr-2"></i> Créer Cargaison
 </button>
