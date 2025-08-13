@@ -21,3 +21,7 @@ $router->dispatch();
 
 // include __DIR__ . '/templates/footer.php';
 ?>
+
+<script></script>
+
+

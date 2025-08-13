@@ -1,122 +1,128 @@
-<?php include __DIR__ . '/../templates/navigation.php'; ?>
+<?php include __DIR__ . '/../templates/navigation.php';?>
 
-       <!-- Filtres et Recherche -->
-        <div class="bg-gray-800 rounded-2xl p-6 border border-cyan-500/20 mb-8 mt-12">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-center space-x-4">
-                    <select id="type-filter" class="p-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-cyan-400 focus:outline-none">
-                        <option value="">Tous les types</option>
-                        <option value="maritime">Maritime</option>
-                        <option value="aerienne">Aérienne</option>
-                        <option value="routiere">Routière</option>
-                    </select>
-                    <select id="status-filter" class="p-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-cyan-400 focus:outline-none">
-                        <option value="">Tous les états</option>
-                        <option value="en-attente">En attente</option>
-                        <option value="en-cours">En cours</option>
-                        <option value="arrive">Arrivé</option>
-                        <option value="recupere">Récupéré</option>
-                        <option value="perdu">Perdu</option>
-                        <option value="archive">Archivé</option>
-                    </select>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <input type="text" id="search-input" placeholder="Rechercher par numéro, lieu..." class="p-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none">
-                    <button onclick="searchCargo()" class="p-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-white">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
+<div class="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-cyan-500/20 mb-8 mt-12">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+            <select id="type-filter" class="p-3 bg-gray-700/80 border border-gray-600/50 rounded-xl text-white focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/30 transition-all">
+                <option value="">Tous les types</option>
+                <option value="MARITIME">Maritime</option>
+                <option value="AERIEN">Aérienne</option>
+                <option value="ROUTIER">Routière</option>
+            </select>
+            <select id="etat-filter" class="p-3 bg-gray-700/80 border border-gray-600/50 rounded-xl text-white focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/30 transition-all">
+                <option value="">Tous les états d'avancement</option>
+                <option value="EN_ATTENTE">En attente</option>
+                <option value="EN_COURS">En cours</option>
+                <option value="ARRIVE">Arrivé</option>
+            </select>
+            <select id="global-filter" class="p-3 bg-gray-700/80 border border-gray-600/50 rounded-xl text-white focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/30 transition-all">
+                <option value="">Tous les états globaux</option>
+                <option value="OUVERT">Ouvert</option>
+                <option value="FERME">Fermé</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques Rapides -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-400/30 rounded-2xl p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-cyan-300 text-sm font-medium">Total Cargaisons</p>
+                <p id="total-cargaison" class="text-white text-2xl font-bold">0</p>
+            </div>
+            <div class="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center">
+                <i class="fas fa-boxes text-cyan-400 text-xl"></i>
             </div>
         </div>
+    </div>
+    
+    <div class="bg-gradient-to-br from-gray-600/20 to-gray-700/10 border border-gray-500/30 rounded-2xl p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p id="cargaison-en-cours" class="text-gray-300 text-sm font-medium">Ouvertes</p>
+                <p id="cargaison-ouverte" class="text-white text-2xl font-bold">0</p>
+            </div>
+            <div class="w-12 h-12 bg-gray-500/20 rounded-xl flex items-center justify-center">
+                <i class="fas fa-unlock text-gray-400 text-xl"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-gradient-to-br from-cyan-400/20 to-cyan-500/10 border border-cyan-400/30 rounded-2xl p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-cyan-300 text-sm font-medium">En Cours</p>
+                <p id="cargaison-enCour" class="text-white text-2xl font-bold">0</p>
+            </div>
+            <div class="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center">
+                <i class="fas fa-shipping-fast text-cyan-400 text-xl"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-gradient-to-br from-gray-500/20 to-gray-600/10 border border-gray-400/30 rounded-2xl p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-300 text-sm font-medium">Fermées</p>
+                <p id="cargaison-fermee" class="text-white text-2xl font-bold">0</p>
+            </div>
+            <div class="w-12 h-12 bg-gray-500/20 rounded-xl flex items-center justify-center">
+                <i class="fas fa-lock text-gray-400 text-xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
 
-        <!-- Table des Cargaisons -->
-        <div class="bg-gray-800 rounded-2xl border border-cyan-500/20 overflow-hidden px-12 py-8 ">
-            <div class="p-6 border-b border-gray-700">
+<!-- Table des Cargaisons -->
+<div class="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-cyan-500/20 overflow-hidden shadow-2xl">
+    <div class="p-6 border-b border-gray-700/50 bg-gradient-to-r from-gray-800/80 to-gray-700/50">
+        <div class="flex items-center justify-between">
+            <div>
                 <h3 class="text-xl font-bold text-white">Cargaisons Récentes</h3>
+                <p class="text-gray-400 text-sm mt-1">Gestion et suivi des cargaisons</p>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-700">
-                        <tr>
-                            <th class="text-left p-4 text-cyan-400 font-semibold">Numéro</th>
-                            <th class="text-left p-4 text-cyan-400 font-semibold">Type</th>
-                            <th class="text-left p-4 text-cyan-400 font-semibold">Trajet</th>
-                            <th class="text-left p-4 text-cyan-400 font-semibold">Poids/Max</th>
-                            <th class="text-left p-4 text-cyan-400 font-semibold">État</th>
-                            <th class="text-left p-4 text-cyan-400 font-semibold">Statut</th>
-                            <th class="text-left p-4 text-cyan-400 font-semibold">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cargo-table-body">
-                        <!-- Données exemple -->
-                        <tr class="border-b border-gray-700 hover:bg-gray-700/50">
-                            <td class="p-4 text-white font-mono">CARG-2024-001</td>
-                            <td class="p-4">
-                                <span class="inline-block w-3 h-3 bg-blue-400 rounded-full mr-2"></span>
-                                <span class="text-blue-400">Maritime</span>
-                            </td>
-                            <td class="p-4 text-gray-300">Dakar → Marseille</td>
-                            <td class="p-4 text-gray-300">3,500 / 5,000 kg</td>
-                            <td class="p-4">
-                                <span class="px-2 py-1 bg-orange-500/20 text-orange-400 rounded-lg text-xs font-semibold">En attente</span>
-                            </td>
-                            <td class="p-4">
-                                <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded-lg text-xs font-semibold">Ouvert</span>
-                            </td>
-                            <td class="p-4">
-                                <div class="flex space-x-2">
-                                    <button onclick="viewCargo('CARG-2024-001')" class="p-1 text-cyan-400 hover:bg-cyan-500/20 rounded">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button onclick="editCargo('CARG-2024-001')" class="p-1 text-yellow-400 hover:bg-yellow-500/20 rounded">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button onclick="toggleCargoStatus('CARG-2024-001')" class="p-1 text-red-400 hover:bg-red-500/20 rounded">
-                                        <i class="fas fa-lock"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr class="border-b border-gray-700 hover:bg-gray-700/50">
-                            <td class="p-4 text-white font-mono">CARG-2024-002</td>
-                            <td class="p-4">
-                                <span class="inline-block w-3 h-3 bg-cyan-400 rounded-full mr-2"></span>
-                                <span class="text-cyan-400">Aérienne</span>
-                            </td>
-                            <td class="p-4 text-gray-300">Paris → New York</td>
-                            <td class="p-4 text-gray-300">1,200 / 2,000 kg</td>
-                            <td class="p-4">
-                                <span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-xs font-semibold">En cours</span>
-                            </td>
-                            <td class="p-4">
-                                <span class="px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-xs font-semibold">Fermé</span>
-                            </td>
-                            <td class="p-4">
-                                <div class="flex space-x-2">
-                                    <button onclick="viewCargo('CARG-2024-002')" class="p-1 text-cyan-400 hover:bg-cyan-500/20 rounded">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button onclick="editCargo('CARG-2024-002')" class="p-1 text-yellow-400 hover:bg-yellow-500/20 rounded">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button onclick="trackCargo('CARG-2024-002')" class="p-1 text-green-400 hover:bg-green-500/20 rounded">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="p-4 border-t border-gray-700">
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-400 text-sm">Affichage de 1-10 sur 47 cargaisons</span>
-                    <div class="flex space-x-2">
-                        <button class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm">Précédent</button>
-                        <button class="px-3 py-1 bg-cyan-500 rounded text-white text-sm">1</button>
-                        <button class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm">2</button>
-                        <button class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm">Suivant</button>
-                    </div>
-                </div>
+            <div class="flex items-center space-x-2">
+                <button class="px-4 py-2 bg-cyan-500/20 text-cyan-400 border border-cyan-400/30 rounded-lg hover:bg-cyan-500/30 transition-all">
+                    <i class="fas fa-download mr-2"></i>Exporter
+                </button>
             </div>
         </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-700/50">
+                <tr>
+                    <th class="text-left p-4 text-cyan-400 font-semibold border-b border-gray-600/30">
+                        <div class="flex items-center space-x-2">
+                            <span>Numéro</span>
+                            <i class="fas fa-sort text-xs opacity-50"></i>
+                        </div>
+                    </th>
+                    <th class="text-left p-4 text-cyan-400 font-semibold border-b border-gray-600/30">
+                        <div class="flex items-center space-x-2">
+                            <span>Type</span>
+                            <i class="fas fa-sort text-xs opacity-50"></i>
+                        </div>
+                    </th>
+                    <th class="text-left p-4 text-cyan-400 font-semibold border-b border-gray-600/30">Trajet</th>
+                    <th class="text-left p-4 text-cyan-400 font-semibold border-b border-gray-600/30">Poids</th>
+                    <th class="text-left p-4 text-cyan-400 font-semibold border-b border-gray-600/30">État Avancement</th>
+                    <th class="text-left p-4 text-cyan-400 font-semibold border-b border-gray-600/30">État Global</th>
+                    <th class="text-center p-4 text-cyan-400 font-semibold border-b border-gray-600/30">Actions</th>
+                </tr>
+            </thead> 
+            <tbody id="cargo-table-body">
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="pagination-container" class="border-t border-gray-700/30">
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script> 
+<script type="module" src="../dist/CargaisonFetcher.js"></script>
