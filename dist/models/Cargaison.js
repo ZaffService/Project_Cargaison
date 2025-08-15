@@ -1,6 +1,7 @@
-import { EtatAvancement } from '../enums/EtatAvancement';
-import { EtatGlobal } from '../enums/EtatGlobal';
-import { TypeCargaison } from "../enums/TypeCargaison";
+import { EtatAvancement } from '../enumsCargaison/EtatAvancement';
+import { EtatGlobal } from '../enumsCargaison/EtatGlobal';
+import { TypeCargaison } from "../enumsCargaison/TypeCargaison";
+import { CalculFrais } from '../services/CalculFrais';
 export class Cargaison {
     constructor(data) {
         this._id = data.id || data.numero || "";
@@ -16,7 +17,6 @@ export class Cargaison {
         this._dateArrivee = this.parseDate(data.dateArrivee) || new Date();
         this._colis = data.colis || [];
     }
-    // Méthode utilitaire pour parser les dates string ou Date
     parseDate(date) {
         if (!date)
             return new Date();
@@ -24,7 +24,6 @@ export class Cargaison {
             return date;
         return new Date(date);
     }
-    // Getters et Setters
     get id() {
         return this._id;
     }
@@ -77,7 +76,7 @@ export class Cargaison {
         return this._etatGlobal;
     }
     set etatGlobal(etatGlobal) {
-        this._etatGlobal = etatGlobal;
+        this.changerEtat(etatGlobal);
     }
     get dateDepart() {
         return this._dateDepart;
@@ -97,7 +96,6 @@ export class Cargaison {
     set colis(colis) {
         this._colis = colis;
     }
-    // Méthodes métier
     fermer() {
         this.etatGlobal = EtatGlobal.FERME;
     }
@@ -110,15 +108,22 @@ export class Cargaison {
         }
     }
     ajouterColis(colis) {
-        this._colis.push(colis);
-    }
-    retirerColis(colisId) {
-        const index = this._colis.findIndex(c => c.id === colisId);
-        if (index !== -1) {
-            this._colis.splice(index, 1);
-            return true;
+        if (this._colis.length >= 10) {
+            throw new Error("La cargaison est pleine (maximum 10 colis)");
         }
-        return false;
+        if (!CalculFrais.verifierCompatibilite(this._type, colis)) {
+            throw new Error(`Ce type de colis n'est pas compatible avec une cargaison ${this._type}`);
+        }
+        this._colis.push(colis);
+        this.calculerFraisTotal();
+    }
+    calculerFraisTotal() {
+        return this._colis.reduce((total, colis) => {
+            return total + CalculFrais.calculerFraisTransport(this._type, colis, this._distance);
+        }, 0);
+    }
+    nbColis() {
+        return this._colis.length;
     }
     async sauvegarder() {
         try {
@@ -156,7 +161,6 @@ export class Cargaison {
             colis: this._colis
         };
     }
-    // Méthode statique pour créer une instance depuis les données du formulaire
     static fromFormData(formData) {
         return new Cargaison({
             id: formData.id,
@@ -172,5 +176,13 @@ export class Cargaison {
             etatGlobal: formData.etatGlobal,
             colis: formData.colis || []
         });
+    }
+    changerEtat(nouvelEtat) {
+        if (nouvelEtat === EtatGlobal.OUVERT) {
+            if (this._etatAvancement !== EtatAvancement.EN_ATTENTE) {
+                throw new Error("Impossible de rouvrir une cargaison si son état d'avancement n'est pas EN_ATTENTE");
+            }
+        }
+        this._etatGlobal = nouvelEtat;
     }
 }

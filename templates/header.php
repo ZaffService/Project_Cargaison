@@ -13,5 +13,7 @@
  
   <!-- Vos styles personnalisés (si nécessaire) -->
   <link href="/styles/globals.css" rel="stylesheet">
+  <script type="module" src="/dist/services/ColisManager.js"></script>
+  <script type="module" src="/dist/enregistrement-colis.js"></script>
 </head>
-<body class="bg-gray-900 min-h-screen text-white px-8 py-8">
+<body class="bg-gray-900 min-h-screen text-white px-8 py-8 overflow-hidden">

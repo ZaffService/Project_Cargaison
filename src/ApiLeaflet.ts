@@ -60,8 +60,7 @@ declare global {
 // Ces interfaces aident TypeScript à comprendre la structure de vos données.
 
 // Type pour les types de cargaison/transport
-import { TypeCargaison } from "./enums/TypeCargaison";
-import type { Cargaison } from './models/Cargaison';
+import { TypeCargaison } from "./enumsCargaison/TypeCargaison";
 
 // Données sur les capacités de transport des pays
 interface CountryCapabilitiesData {
@@ -1198,17 +1197,7 @@ document.addEventListener("DOMContentLoaded", (): void => {
     }
   })
 
-  // Événement pour le bouton "Annuler" (réinitialise le formulaire et la carte)
-  // clearFormBtn?.addEventListener("click", (): void => {
-  //   formCargaison?.reset()
-  //   clearAllMarkers()
-  //   const durationInfoEl = document.getElementById("duration-info")
-  //   if (durationInfoEl) {
-  //     durationInfoEl.textContent = "Sélectionnez les dates pour voir la durée du transport"
-  //   }
-  //   numeroInput.value = generateCargoNumber() // Génère un nouveau numéro après annulation
-  // })
+ 
 })
 
-// Définit la page active pour la navigation (utilisé par le script de navigation PHP)
 window.currentPage = "creation-cargaison"

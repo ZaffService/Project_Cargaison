@@ -85,7 +85,7 @@
             </div>
             <div class="flex items-center space-x-2">
                 <button class="px-4 py-2 bg-cyan-500/20 text-cyan-400 border border-cyan-400/30 rounded-lg hover:bg-cyan-500/30 transition-all">
-                    <i class="fas fa-download mr-2"></i>Exporter
+                    <i class="fas fa-download mr-2"></i>PDF
                 </button>
             </div>
         </div>
@@ -111,7 +111,7 @@
                     <th class="text-left p-4 text-cyan-400 font-semibold border-b border-gray-600/30">Poids</th>
                     <th class="text-left p-4 text-cyan-400 font-semibold border-b border-gray-600/30">État Avancement</th>
                     <th class="text-left p-4 text-cyan-400 font-semibold border-b border-gray-600/30">État Global</th>
-                    <th class="text-center p-4 text-cyan-400 font-semibold border-b border-gray-600/30">Actions</th>
+                    <th class="text-center p-4 text-cyan-400 font-semibold border-b border-gray-600/30">Ouverture / Fermeture</th>
                 </tr>
             </thead> 
             <tbody id="cargo-table-body">
@@ -123,6 +123,20 @@
     </div>
 </div>
 
+<!-- Modal d'annonce -->
+<div id="status-modal" class="fixed inset-0 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-gray-800/95 backdrop-blur-sm border border-cyan-500/30 rounded-2xl p-6 transform scale-95 transition-transform duration-300 flex items-center space-x-4 shadow-xl shadow-cyan-500/10">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 flex items-center justify-center">
+            <i id="status-icon" class="fas text-2xl text-cyan-400"></i>
+        </div>
+        <div>
+            <h3 id="status-message" class="text-white font-semibold"></h3>
+            <p id="status-details" class="text-gray-400 text-sm"></p>
+        </div>
+    </div>
+</div>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.tailwindcss.com"></script> 
 <script type="module" src="../dist/CargaisonFetcher.js"></script>
+

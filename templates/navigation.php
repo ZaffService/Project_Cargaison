@@ -24,17 +24,17 @@
                 <a href="/enregistrement-colis" 
                    class="nav-link text-gray-300 hover:text-cyan-400 transition-colors duration-300 font-medium"
                    data-page="enregistrement-colis">
-                   Enregistrer Colis
+                   Enregistrer un Colis
                 </a>
                 <a href="/lister-cargaison" 
                    class="nav-link text-gray-300 hover:text-cyan-400 transition-colors duration-300 font-medium"
                    data-page="lister-cargaison">
-                   Lister Cargaison
+                    Voir details cargaison
                 </a>
                 <a href="/outils-gestionnaire" 
                    class="nav-link text-gray-300 hover:text-cyan-400 transition-colors duration-300 font-medium"
                    data-page="outils-gestionnaire">
-                   Outils Gestionnaire
+                   Voir details colis
                 </a>
                 <a href="/logout" 
                    class="text-gray-300 hover:text-cyan-400 transition-colors duration-300 font-medium bg-red-500 border border-red-600 rounded-lg p-2 inline-flex items-center justify-center hover:bg-red-600">

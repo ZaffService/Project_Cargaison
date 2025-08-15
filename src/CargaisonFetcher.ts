@@ -59,6 +59,30 @@ class CargaisonFetcher {
         }
     }
 
+    async changerEtatCargaison(numero: string, nouvelEtat: string) {
+        try {
+            const response = await fetch(`${this.endpoint}/${numero}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ 
+                    etatGlobal: nouvelEtat,
+                    validation: true // Ajouter un flag pour indiquer qu'il faut valider
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            throw error;
+        }
+    }
+
     private renderTableRows(cargaisons: ICargaison[]): string {
         return cargaisons.map(cargaison => `
             <tr class="border-b border-gray-700/30 hover:bg-gray-700/30 transition-all group">
@@ -68,7 +92,7 @@ class CargaisonFetcher {
                             <i class="fas ${this.getIconClass(cargaison.type)}"></i>
                         </div>
                         <div>
-                            <span class="text-white font-mono font-semibold">${cargaison.numero}</span>
+                            <span data-numero="${cargaison.numero}" class="text-white font-mono font-semibold">${cargaison.numero}</span>
                             <p class="text-gray-400 text-xs">Créé le ${new Date(cargaison.dateDepart).toLocaleDateString()}</p>
                         </div>
                     </div>
@@ -102,29 +126,114 @@ class CargaisonFetcher {
                     </span>
                 </td>
                 <td class="p-4">
-                    <span class="inline-flex items-center px-3 py-1 ${cargaison.etatGlobal === 'OUVERT' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-400/30' : 'bg-gray-600/20 text-gray-400 border-gray-500/30'} rounded-full text-xs font-semibold border">
+                    <span data-etat="${cargaison.etatGlobal}" class="inline-flex items-center px-3 py-1 ${cargaison.etatGlobal === 'OUVERT' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-400/30' : 'bg-gray-600/20 text-gray-400 border-gray-500/30'} rounded-full text-xs font-semibold border">
                         <div class="w-2 h-2 ${cargaison.etatGlobal === 'OUVERT' ? 'bg-cyan-400' : 'bg-gray-400'} rounded-full mr-2"></div>
                         ${cargaison.etatGlobal}
                     </span>
                 </td>
                 <td class="p-4">
-                    <div class="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button class="p-2 text-cyan-400 hover:bg-cyan-500/20 rounded-lg transition-all" title="Voir détails">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="p-2 text-gray-400 hover:bg-gray-500/20 rounded-lg transition-all" title="Modifier">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="p-2 text-cyan-400 hover:bg-cyan-500/20 rounded-lg transition-all" title="${cargaison.etatGlobal === 'OUVERT' ? 'Fermer' : 'Ouvrir'}">
+                    <div class="flex items-center justify-center space-x-2">
+                        <button 
+                            id="changer-etat" 
+                            class="p-2 ${cargaison.etatGlobal === 'FERME' && cargaison.etatAvancement !== 'EN_ATTENTE' 
+                                ? 'text-gray-500 cursor-not-allowed' 
+                                : 'text-red-400 hover:bg-cyan-500/20'} 
+                            rounded-lg transition-all" 
+                            title="${cargaison.etatGlobal === 'FERME' && cargaison.etatAvancement !== 'EN_ATTENTE'
+                                ? 'Impossible de rouvrir - État avancement: ' + cargaison.etatAvancement
+                                : cargaison.etatGlobal === 'OUVERT' ? 'Fermer' : 'Ouvrir'}"
+                            ${cargaison.etatGlobal === 'FERME' && cargaison.etatAvancement !== 'EN_ATTENTE' ? 'disabled' : ''}
+                        >
                             <i class="fas ${cargaison.etatGlobal === 'OUVERT' ? 'fa-lock-open' : 'fa-lock'}"></i>
-                        </button>
-                        <button class="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-all" title="Supprimer">
-                            <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </td>
             </tr>
         `).join('');
+    }
+
+    public attacherEcouteurEvenement(): void {
+        const recupBouton = document.querySelectorAll("#changer-etat");
+        recupBouton.forEach(bouton => {
+            bouton.addEventListener("click", async (e: Event) => {
+                e.preventDefault();
+                
+                const btn = e.currentTarget as HTMLElement;
+                if (btn.hasAttribute('disabled')) {
+                    // Récupérer l'état d'avancement depuis la ligne du tableau
+                    const row = btn.closest('tr');
+                    const etatAvancementElement = row?.querySelector('td:nth-child(5) span');
+                    const etatAvancement = etatAvancementElement?.textContent?.trim() || 'inconnu';
+                    
+                    this.showStatusModal('', '', 'error', `Impossible de rouvrir une cargaison fermée dont l'état d'avancement n'est pas EN_ATTENTE (actuellement: ${etatAvancement})`);
+                    return;
+                }
+                
+                const row = btn.closest('tr');
+                if (!row) return;
+
+                const numeroElement = row.querySelector("[data-numero]");
+                const etatElement = row.querySelector("[data-etat]");
+                const iconElement = btn.querySelector("i");
+
+                const numero = numeroElement?.getAttribute('data-numero');
+                const etat = etatElement?.getAttribute('data-etat');
+
+                if (!numero || !etat || !iconElement) return;
+
+                // Vérification supplémentaire avant de changer l'état
+                if (etat === "FERME") {
+                    const etatAvancementElement = row.querySelector('td:nth-child(5) span');
+                    const etatAvancement = etatAvancementElement?.textContent?.trim();
+                    
+                    if (etatAvancement !== 'EN_ATTENTE') {
+                        this.showStatusModal('', '', 'error', `Impossible de rouvrir la cargaison ${numero}. État d'avancement: ${etatAvancement} (doit être EN_ATTENTE)`);
+                        return;
+                    }
+                }
+
+                const nouvelEtat = etat === "OUVERT" ? "FERME" : "OUVERT";
+                
+                try {
+                    const update = await this.changerEtatCargaison(numero, nouvelEtat);
+                    
+                    // Mettre à jour les données locales filteredData
+                    const cargaisonIndex = this.filteredData.findIndex(c => c.numero === numero);
+                    if (cargaisonIndex !== -1) {
+                        this.filteredData[cargaisonIndex].etatGlobal = update.etatGlobal;
+                    }
+                    
+                    if (etatElement) {
+                        etatElement.textContent = update.etatGlobal;
+                        etatElement.setAttribute('data-etat', update.etatGlobal);
+                        
+                        if (update.etatGlobal === "OUVERT") {
+                            etatElement.classList.remove('bg-gray-600/20', 'text-gray-400', 'border-gray-500/30');
+                            etatElement.classList.add('bg-cyan-500/20', 'text-cyan-400', 'border-cyan-400/30');
+                            iconElement.classList.remove('fa-lock');
+                            iconElement.classList.add('fa-lock-open');
+                            btn.setAttribute('title', 'Fermer');
+                            
+                        } else {
+                            etatElement.classList.add('bg-gray-600/20', 'text-gray-400', 'border-gray-500/30');
+                            etatElement.classList.remove('bg-cyan-500/20', 'text-cyan-400', 'border-cyan-400/30');
+                            iconElement.classList.remove('fa-lock-open');
+                            iconElement.classList.add('fa-lock');
+                            btn.setAttribute('title', 'Ouvrir');
+                        }
+                    }
+                    
+                    this.showStatusModal(numero, nouvelEtat);
+                    
+                    await this.updateStats();
+                    
+                    // Recharger les données depuis le serveur pour synchroniser
+                    await this.refreshCurrentData();
+                } catch (error) {
+                    console.error("Erreur lors du changement d'état:", error);
+                }
+            });
+        });
     }
 
     private renderPagination(): void {
@@ -157,7 +266,6 @@ class CargaisonFetcher {
             </div>
         `;
 
-        // Ajouter les event listeners pour les boutons
         const prevBtn = document.getElementById("prev-btn");
         const nextBtn = document.getElementById("next-btn");
 
@@ -176,6 +284,25 @@ class CargaisonFetcher {
         });
     }
 
+    private async refreshCurrentData(): Promise<void> {
+        // Recharger les données depuis le serveur et appliquer les filtres actuels
+        const cargaisons = await this.fetchCargaisons();
+
+        const typeFilter = document.querySelector<HTMLSelectElement>("#type-filter")?.value;
+        const avancementFilter = document.querySelector<HTMLSelectElement>("#etat-filter")?.value;
+        const globalFilter = document.querySelector<HTMLSelectElement>("#global-filter")?.value;
+
+        this.filteredData = cargaisons.filter(c => {
+            const Type = typeFilter ? c.type === typeFilter : true;
+            const Avancement = avancementFilter ? c.etatAvancement === avancementFilter : true;
+            const Global = globalFilter ? c.etatGlobal === globalFilter : true;
+            return Type && Avancement && Global;
+        });
+
+        // Reafficher la page courante avec les données fraîches
+        this.displayCurrentPage();
+    }
+
     private displayCurrentPage(): void {
         const startIndex = (this.currentPage - 1) * this.itemsPerPage;
         const endIndex = startIndex + this.itemsPerPage;
@@ -184,6 +311,7 @@ class CargaisonFetcher {
         const tableBody = document.getElementById("cargo-table-body");
         if (tableBody) {
             tableBody.innerHTML = this.renderTableRows(currentPageData);
+            this.attacherEcouteurEvenement(); 
         }
 
         this.renderPagination();
@@ -191,7 +319,7 @@ class CargaisonFetcher {
 
     async displayCargaisons(): Promise<void> {
         this.filteredData = await this.fetchCargaisons();
-        this.currentPage = 1; // Reset à la première page
+        this.currentPage = 1; 
         this.displayCurrentPage();
     }
 
@@ -209,7 +337,7 @@ class CargaisonFetcher {
             return Type && Avancement && Global;
         });
 
-        this.currentPage = 1; // Reset à la première page après filtrage
+        this.currentPage = 1; 
         this.displayCurrentPage();
         this.updateStats();
     }
@@ -232,13 +360,55 @@ class CargaisonFetcher {
         if (elements.enCours) elements.enCours.textContent = enCours.toString();
         if (elements.fermees) elements.fermees.textContent = fermees.toString();
     }
+
+    private showStatusModal(numero: string, nouvelEtat: string, type: 'success' | 'error' = 'success', message?: string): void {
+        const modal = document.getElementById('status-modal');
+        const icon = document.getElementById('status-icon');
+        const messageEl = document.getElementById('status-message');
+        const details = document.getElementById('status-details');
+        const modalContent = modal?.querySelector('div');
+
+        if (modal && icon && messageEl && details && modalContent) {
+            const colorClasses = type === 'success' 
+                ? {
+                    bg: nouvelEtat === 'OUVERT' ? 'bg-green-500/20' : 'bg-red-500/20',
+                    border: nouvelEtat === 'OUVERT' ? 'border-green-500/30' : 'border-red-500/30',
+                    text: nouvelEtat === 'OUVERT' ? 'text-green-400' : 'text-red-400'
+                  }
+                : {
+                    bg: 'bg-yellow-500/20',
+                    border: 'border-yellow-500/30',
+                    text: 'text-yellow-400'
+                  };
+
+            modalContent.className = `bg-gray-800/95 backdrop-blur-sm border ${colorClasses.border} rounded-2xl p-6 transform scale-95 transition-transform duration-300 flex items-center space-x-4 shadow-xl`;
+            icon.className = `fas ${type === 'success' 
+                ? (nouvelEtat === 'OUVERT' ? 'fa-lock-open' : 'fa-lock')
+                : 'fa-exclamation-triangle'} text-2xl ${colorClasses.text}`;
+            
+            messageEl.className = `text-white font-semibold ${colorClasses.text}`;
+            messageEl.textContent = type === 'success' 
+                ? `Cargaison ${nouvelEtat.toLowerCase()}e`
+                : "Action impossible";
+                
+            details.textContent = message || `La cargaison ${numero} a été ${nouvelEtat.toLowerCase()}e avec succès`;
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modal.classList.remove('opacity-100');
+            }, 3000);
+        }
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     const fetcher = new CargaisonFetcher();
     fetcher.displayCargaisons();
     fetcher.updateStats();
-
+    
     const filters = ["type-filter", "etat-filter", "global-filter"];
     filters.forEach(id => {
         document.getElementById(id)?.addEventListener("change", () => {

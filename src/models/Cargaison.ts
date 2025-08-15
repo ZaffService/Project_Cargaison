@@ -1,7 +1,9 @@
-import { EtatAvancement } from '../enums/EtatAvancement';
-import { EtatGlobal } from '../enums/EtatGlobal';
-import { TypeCargaison } from "../enums/TypeCargaison";
+import { EtatAvancement } from '../enumsCargaison/EtatAvancement';
+import { EtatGlobal } from '../enumsCargaison/EtatGlobal';
+import { TypeCargaison } from "../enumsCargaison/TypeCargaison";
 import { ICargaison, ILieu, IColis } from "./Icargaison";  
+import { CalculFrais } from '../services/CalculFrais';
+import { Colis } from './Colis';
 
 export class Cargaison implements ICargaison {
    private _id: string;
@@ -15,7 +17,7 @@ export class Cargaison implements ICargaison {
    private _etatGlobal: EtatGlobal;
    private _dateDepart: Date;
    private _dateArrivee: Date;
-   private _colis: IColis[];
+   private _colis: IColis[]; 
 
    constructor(data: Partial<ICargaison>) {
     this._id = data.id || data.numero || ""
@@ -32,14 +34,12 @@ export class Cargaison implements ICargaison {
     this._colis = data.colis || []
    }
 
-   // Méthode utilitaire pour parser les dates string ou Date
    private parseDate(date: string | Date | undefined): Date {
     if (!date) return new Date();
     if (date instanceof Date) return date;
     return new Date(date);
    }
 
-   // Getters et Setters
    get id(): string {
      return this._id;
    }
@@ -100,7 +100,7 @@ export class Cargaison implements ICargaison {
      return this._etatGlobal;
    }
    set etatGlobal(etatGlobal: EtatGlobal) {
-     this._etatGlobal = etatGlobal;
+     this.changerEtat(etatGlobal);
    }
 
    get dateDepart(): Date {
@@ -117,14 +117,13 @@ export class Cargaison implements ICargaison {
      this._dateArrivee = this.parseDate(dateArrivee);
    }
 
-   get colis(): IColis[] {
+   get colis(): IColis[] { 
      return this._colis;
    }
-   set colis(colis: IColis[]) {
+   set colis(colis: IColis[]) { 
      this._colis = colis;
    }
 
-   // Méthodes métier
    public fermer(): void {
     this.etatGlobal = EtatGlobal.FERME;
    }
@@ -137,17 +136,27 @@ export class Cargaison implements ICargaison {
     }
    }
 
-   public ajouterColis(colis: IColis): void {
+   public ajouterColis(colis: IColis): void { 
+    if (this._colis.length >= 10) {
+        throw new Error("La cargaison est pleine (maximum 10 colis)");
+    }
+
+    if (!CalculFrais.verifierCompatibilite(this._type, colis)) {
+        throw new Error(`Ce type de colis n'est pas compatible avec une cargaison ${this._type}`);
+    }
+
     this._colis.push(colis);
+    this.calculerFraisTotal();
    }
 
-   public retirerColis(colisId: string): boolean {
-    const index = this._colis.findIndex(c => c.id === colisId);
-    if (index !== -1) {
-        this._colis.splice(index, 1);
-        return true;
-    }
-    return false;
+   private calculerFraisTotal(): number {
+        return this._colis.reduce((total, colis) => {
+            return total + CalculFrais.calculerFraisTransport(this._type, colis, this._distance);
+        }, 0);
+   }
+
+   public nbColis(): number {
+        return this._colis.length;
    }
 
    public async sauvegarder(): Promise<void> {
@@ -189,7 +198,6 @@ export class Cargaison implements ICargaison {
         };
    }
 
-   // Méthode statique pour créer une instance depuis les données du formulaire
    public static fromFormData(formData: any): Cargaison {
     return new Cargaison({
         id: formData.id,
@@ -206,4 +214,13 @@ export class Cargaison implements ICargaison {
         colis: formData.colis || []
     });
    }
+
+   public changerEtat(nouvelEtat: EtatGlobal): void {
+        if (nouvelEtat === EtatGlobal.OUVERT) {
+            if (this._etatAvancement !== EtatAvancement.EN_ATTENTE) {
+                throw new Error("Impossible de rouvrir une cargaison si son état d'avancement n'est pas EN_ATTENTE");
+            }
+        }
+        this._etatGlobal = nouvelEtat;
+    }
 }

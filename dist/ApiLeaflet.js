@@ -981,16 +981,5 @@ document.addEventListener("DOMContentLoaded", () => {
             showErrorToast("Échec de la création de la cargaison", `Veuillez vérifier le serveur JSON. Détails: ${error instanceof Error ? error.message : String(error)}`);
         }
     });
-    // Événement pour le bouton "Annuler" (réinitialise le formulaire et la carte)
-    // clearFormBtn?.addEventListener("click", (): void => {
-    //   formCargaison?.reset()
-    //   clearAllMarkers()
-    //   const durationInfoEl = document.getElementById("duration-info")
-    //   if (durationInfoEl) {
-    //     durationInfoEl.textContent = "Sélectionnez les dates pour voir la durée du transport"
-    //   }
-    //   numeroInput.value = generateCargoNumber() // Génère un nouveau numéro après annulation
-    // })
 });
-// Définit la page active pour la navigation (utilisé par le script de navigation PHP)
 window.currentPage = "creation-cargaison";

@@ -29,7 +29,36 @@
       "dateArrivee": "2025-08-13T00:00:00.000Z",
       "etatAvancement": "EN_ATTENTE",
       "etatGlobal": "OUVERT",
-      "colis": []
+      "colis": [
+        {
+          "id": "COL-239346-O4SRB9",
+          "libelle": "pomme",
+          "poids": 13,
+          "type": "ALIMENTAIRE",
+          "codeDeSuivi": "COL-239346-O4SRB9",
+          "etatAvancement": "EN_ATTENTE",
+          "etatColis": "ARCHIVE",
+          "dateCreation": "2025-08-15T11:27:19.346Z"
+        },
+        {
+          "id": "COL-2",
+          "libelle": "Ananas",
+          "poids": 500,
+          "type": "ALIMENTAIRE",
+          "codeDeSuivi": "COL-2",
+          "etatAvancement": "EN_ATTENTE",
+          "etatColis": "ARCHIVE",
+          "dateCreation": "2025-08-15T11:38:12.389Z",
+          "destinataire": {
+            "nom": "Seck",
+            "prenom": "Moustapha",
+            "telephone": "78 444 19 09",
+            "email": "seckmoustapha238@gmail.com",
+            "adresse": "Petit Mbao"
+          }
+        }
+      ],
+      "validation": true
     },
     {
       "id": "CARG-1108-8124",
@@ -53,7 +82,8 @@
       "dateArrivee": "2025-08-12T00:00:00.000Z",
       "etatAvancement": "EN_ATTENTE",
       "etatGlobal": "OUVERT",
-      "colis": []
+      "colis": [],
+      "validation": true
     },
     {
       "id": "CARG-1208-6046",
@@ -77,7 +107,8 @@
       "dateArrivee": "2025-08-13T00:00:00.000Z",
       "etatAvancement": "EN_ATTENTE",
       "etatGlobal": "OUVERT",
-      "colis": []
+      "colis": [],
+      "validation": true
     },
     {
       "id": "CARG-1208-3767",
@@ -100,8 +131,9 @@
       "dateDepart": "2025-08-13T00:00:00.000Z",
       "dateArrivee": "2025-08-13T00:00:00.000Z",
       "etatAvancement": "EN_COURS",
-      "etatGlobal": "OUVERT",
-      "colis": []
+      "etatGlobal": "FERME",
+      "colis": [],
+      "validation": true
     },
     {
       "id": "CARG-1208-7856",
@@ -123,8 +155,33 @@
       },
       "dateDepart": "2025-08-13T00:00:00.000Z",
       "dateArrivee": "2025-08-14T00:00:00.000Z",
-      "etatAvancement": "EN_COURS",
-      "etatGlobal": "FERME",
+      "etatAvancement": "EN_ATTENTE",
+      "etatGlobal": "OUVERT",
+      "colis": [],
+      "validation": true
+    },
+    {
+      "id": "CARG-1408-6300",
+      "numero": "CARG-1408-6300",
+      "poidsMax": 54,
+      "type": "ROUTIER",
+      "distance": 922,
+      "lieuDepart": {
+        "nom": "Guerém, Valença, Região Geográfica Imediata de Valença, Região Geográfica Intermediária de Santo Antônio de Jesus, Bahia, Région Nord-est, 45413-970, Brésil",
+        "latitude": -13.325484885597936,
+        "longitude": -39.28710937500001,
+        "pays": "Brésil"
+      },
+      "lieuArrivee": {
+        "nom": "Alberto Isaacson, Martinho Campos, Região Geográfica Imediata de Dores do Indaiá, Região Geográfica Intermediária de Divinópolis, Minas Gerais, Région Sud-est, 35608-000, Brésil",
+        "latitude": -19.476950206488414,
+        "longitude": -45.08789062500001,
+        "pays": "Brésil"
+      },
+      "dateDepart": "2025-08-16T00:00:00.000Z",
+      "dateArrivee": "2025-08-16T00:00:00.000Z",
+      "etatAvancement": "EN_ATTENTE",
+      "etatGlobal": "OUVERT",
       "colis": []
     }
   ]
